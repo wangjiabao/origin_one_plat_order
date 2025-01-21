@@ -243,7 +243,7 @@ var (
 				})
 			})
 
-			s.SetPort(8100)
+			s.SetPort(8101)
 			s.Run()
 
 			return nil
