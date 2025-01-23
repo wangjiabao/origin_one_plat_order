@@ -3,17 +3,20 @@ package listenandorder
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gateio/gateapi-go/v6"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/grpool"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gorilla/websocket"
 	"log"
 	"math"
 	"plat_order/internal/logic/binance"
+	"plat_order/internal/model/do"
 	"plat_order/internal/model/entity"
 	"plat_order/internal/service"
 	"strconv"
@@ -1845,6 +1848,47 @@ func (s *sListenAndOrder) GetSystemUserNum(ctx context.Context) map[string]float
 	}
 
 	return res
+}
+
+// CreateUser set user num
+func (s *sListenAndOrder) CreateUser(ctx context.Context, address, apiKey, apiSecret, plat string, needInit uint64) error {
+	var (
+		users []*entity.User
+		err   error
+	)
+	apiStatusOk := make([]uint64, 0)
+	apiStatusOk = append(apiStatusOk, 1, 3)
+
+	err = g.Model("user").WhereIn("api_status", apiStatusOk).Ctx(ctx).Scan(&users)
+	if nil != err {
+		log.Println("CreateUser，数据库查询错误：", err)
+		return err
+	}
+
+	if 35 <= len(users) {
+		return errors.New("超人数")
+	}
+
+	_, err = g.Model("user").Ctx(ctx).Insert(&do.User{
+		Address:    address,
+		ApiStatus:  3,
+		ApiKey:     apiKey,
+		ApiSecret:  apiSecret,
+		OpenStatus: 2,
+		CreatedAt:  gtime.Now(),
+		UpdatedAt:  gtime.Now(),
+		NeedInit:   needInit,
+		Num:        1,
+		Plat:       plat,
+		Dai:        0,
+		Ip:         1,
+	})
+
+	if nil != err {
+		log.Println("新增用户失败：", err)
+		return err
+	}
+	return nil
 }
 
 // SetSystemUserNum set user num

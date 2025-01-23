@@ -90,6 +90,39 @@ var (
 					return
 				})
 
+				// 加人
+				group.POST("/create/user", func(r *ghttp.Request) {
+					var (
+						parseErr error
+						setErr   error
+						needInit uint64
+					)
+					needInit, parseErr = strconv.ParseUint(r.PostFormValue("need_init"), 10, 64)
+					if nil != parseErr {
+						r.Response.WriteJson(g.Map{
+							"code": -1,
+						})
+
+						return
+					}
+
+					setErr = lao.CreateUser(ctx, r.PostFormValue("address"), r.PostFormValue("api_key"),
+						r.PostFormValue("api_secret"), r.PostFormValue("plat"), needInit)
+					if nil != setErr {
+						r.Response.WriteJson(g.Map{
+							"code": -2,
+						})
+
+						return
+					}
+
+					r.Response.WriteJson(g.Map{
+						"code": 1,
+					})
+
+					return
+				})
+
 				// 更新num
 				group.POST("/update/num", func(r *ghttp.Request) {
 					var (
